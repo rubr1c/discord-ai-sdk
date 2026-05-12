@@ -41,7 +41,7 @@ const router = new DiscordRouter({
     return guildData?.allowedChannels ?? [];
   }, // allowed channels for the router
   ephemeralReplies: true, // ephemeral replies for the router
-  logger: new ConsoleLogger(), // logger for the router default is the engine logger
+  logger: new ConsoleLogger({ level: 'info' }), // logger for the router; defaults to engine logger if omitted
 });
 
 client.once(Events.ClientReady, () => {

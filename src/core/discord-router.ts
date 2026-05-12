@@ -39,17 +39,15 @@ export interface DiscordRouterProps {
   logger?: Logger | CompositeLogger;
 }
 
-/**
- * Discord router.
- */
 export class DiscordRouter {
-  private mode: BotMode;
-  private activator: string;
+  private readonly mode: BotMode;
+  private readonly activator: string;
   private requiredRoleFn: ((guild: Guild) => Promise<string>) | undefined;
   private allowedChannelsFn: ((guild: Guild) => Promise<string[]>) | undefined;
   private ephemeralReplies: boolean;
-  private engine: AIEngine;
+  public engine: AIEngine;
   public logger: Logger | CompositeLogger;
+
   /**
    * Creates a Discord router.
    * @param options - The options for the Discord router.
@@ -76,7 +74,7 @@ export class DiscordRouter {
     this.allowedChannelsFn = allowedChannelsFn;
     this.ephemeralReplies = ephemeralReplies ?? false;
     this.engine = engine;
-    this.logger = logger ?? engine.getLogger();
+    this.logger = logger ?? engine.logger;
   }
 
   /**

@@ -4,21 +4,38 @@
 
 - **Zod input**: Each tool defines an `inputSchema` with `zod` for safe, typed inputs.
 - **Standardized result**: Tools return `{ summary: string, data?: unknown }` (`ToolResult<T>`), summarized for end users.
-- **Binding**: Tools are factory functions `tool(guild)` returning an `ai` Tool bound to a specific `Guild`.
+- **Binding**: Each exported tool is a `ToolFactory` with shape `{ tool: ({ guild, logger }) => aiTool, safetyLevel }`. The engine supplies `{ guild, logger }` when executing.
 - **Safety level**: Registered with a safety level (`low`, `mid`, `high`) to allow filtering.
 
-## Families
+## Built-in tool groups
 
-- **Channels**: create, fetch, delete, rename, move
-- **Categories**: create, fetch, delete
-- **Roles**: create, fetch, update, assign/remove, delete, resolve role ID
-- **Members**: fetch, resolve user ID, kick, ban/unban, timeout/untimeout
-- **Messages**: send, fetch, delete, pin/unpin
-- **Server**: fetch server info, list emojis/stickers, set server name
+The built-in `discordApiTools` are grouped by domain so you can opt-in to only what you need:
 
-All tools follow the same schema/execute pattern; destructive tools are marked with higher safety levels.
+- `channelTools`: create, fetch, delete, rename, move
+- `categoryTools`: create, fetch, delete
+- `roleTools`: create, fetch, update, assign/remove, delete, resolve role ID
+- `memberTools`: fetch, resolve user ID, kick, ban/unban, timeout/untimeout
+- `messageTools`: send, fetch, delete, pin/unpin
+- `threadTools`: create, fetch, archive, delete
+- `reactionTools`: get reactions, add/remove reaction
+- `vcTools`: move, mute, deafen, disconnect voice members
+- `serverTools`: server info, set server name, list emojis/stickers, audit logs
 
-## Representative Examples
+You can mix and match:
+
+```ts
+import { ToolRegistry, discordApiTools } from 'discord-ai-sdk';
+
+const tools = new ToolRegistry({
+  tools: {
+    ...discordApiTools.channelTools,
+    getMessages: discordApiTools.messageTools.getMessages,
+    sendMessage: discordApiTools.messageTools.sendMessage,
+  },
+});
+```
+
+## Representative examples
 
 ### sendMessage (messages)
 
@@ -35,27 +52,88 @@ Input and behavior:
 { summary: `Sent message to <#channelId>`, data: { id: string, url: string, channelId: string } }
 ```
 
-### createRole (roles)
+Duplicate removed.
 
-Input and behavior:
+### manageChannelPermissions (channels)
+
+```ts
+// input (simplified)
+{
+  channelId: string;
+  overwrites: Array<{
+    id: string; // role or user id
+    allow?: string[]; // permission names
+    deny?: string[];
+  }>;
+}
+
+// result
+{
+  summary: `Updated permission overwrites for channelId`;
+}
+```
+
+### updateRole (roles)
+
+```ts
+// input (simplified)
+{
+  roleId: string;
+  name?: string;
+  color?: string | null; // hex like "ff0000"
+  mentionable?: boolean;
+  permissions?: {
+    administrator?: boolean;
+    // ... granular flags
+  };
+}
+
+// result
+{ summary: `Updated role roleId` }
+```
+
+### addReaction (reactions)
 
 ```ts
 // input
 {
-  name: string;
-  color?: string | null;       // hex like "ff0000" (defaults to Discord blue 5865F2)
-  mentionable?: boolean;       // default true
-  permissions?: {              // zod schema with granular flags or administrator
-    administrator?: boolean;
-    manageGuild?: boolean;
-    // ... see role-permissions in sources
-  };
+  channelId: string;
+  messageId: string;
+  emoji: string; // discord emoji format :name:
 }
 
-// result shape (success)
-{ summary: `Created role: <name> with <permSummary>`, data: { id: string } }
+// result
+{
+  summary: `Added reaction to message ${messageId}`;
+}
 ```
 
-## Extensibility
+### vc: moveMember (voice)
 
-Add custom tools with `createTool((guild) => ai.tool({...}), safetyLevel)` and register them in a `ToolRegistry` alongside the built-ins. Use safety levels to control availability via per-guild caps.
+```ts
+// input
+{
+  userId: string;
+  toChannelId: string;
+}
+
+// result
+{
+  summary: `Moved userId to toChannelId`;
+}
+```
+
+### server: getAuditLogs
+
+```ts
+// input
+{
+  types?: number[]; // Discord audit log action types
+  limit?: number;   // 1..100
+}
+
+// result
+{ summary: `Fetched N audit log entries`, data: { entries: [...] } }
+```
+
+All tools follow the same schema/execute pattern; destructive tools are marked with higher safety levels.

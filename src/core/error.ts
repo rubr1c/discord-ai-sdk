@@ -1,6 +1,3 @@
-/**
- * Error reasons.
- */
 export const ErrorReason = {
   RATE_LIMIT: 'Rate Limited',
   NO_PERMISSION: 'No Permission',

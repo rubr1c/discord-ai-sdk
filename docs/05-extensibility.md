@@ -1,87 +1,76 @@
 # Extensibility
 
-## Custom Tools
+You can add your own tools alongside the built-ins and control their availability with safety levels and caps.
 
-Register your own tools next to the built-ins. Use `zod` for inputs and return `ToolResult`.
+## Creating a custom tool
 
 ```ts
-import { ToolRegistry, createTool, discordApiTools } from 'discord-ai-sdk';
 import { tool } from 'ai';
-import { z } from 'zod';
+import z from 'zod';
+import { ToolRegistry, discordApiTools } from 'discord-ai-sdk';
+import type { ToolFactory, ToolResult } from '@/tools/types';
 
-const toolRegistry = new ToolRegistry({
+// Define as a ToolFactory
+export const myCustomTool: ToolFactory = {
+  safetyLevel: 'low',
+  tool: ({ guild, logger }) =>
+    tool({
+      description: 'do something safe and useful',
+      inputSchema: z.object({ name: z.string().min(1) }),
+      execute: async ({ name }): Promise<ToolResult> => {
+        logger.info({ message: 'myCustomTool.execute', guild, meta: { name } });
+        // ... your logic here ...
+        return { summary: `Hello ${name}` };
+      },
+    }),
+};
+
+const registry = new ToolRegistry({
   tools: {
-    ...discordApiTools,
-    greetUser: createTool(
-      (guild) =>
-        tool({
-          description: 'greet a user by name',
-          inputSchema: z.object({ name: z.string().min(1) }),
-          execute: async ({ name }) => ({ summary: `[${guild.name}] Hello ${name}!` }),
-        }),
-      'low',
-    ),
+    ...discordApiTools.channelTools,
+    myCustomTool,
   },
 });
 ```
 
-## PromptBuilder Rules
+## Safety model
 
-Replace or extend system rules responsibly.
+- Every registered tool has a safety level: `'low' | 'mid' | 'high'`.
+- You can cap the max safety a guild can access globally or per-guild.
+
+Global cap:
 
 ```ts
-import { PromptBuilder } from 'discord-ai-sdk';
-
-const pb = new PromptBuilder();
-pb.addRule('Prefer concise, bullet-style summaries.');
-// override entire system prompt if you must
-pb.override('You are a helpful assistant.');
+registry.setSafetyModeCap('mid');
 ```
 
-## Per-guild Safety Caps and Gating
-
-Provide per-guild safety caps and router gates.
+Per-guild cap via async function:
 
 ```ts
-import { ToolRegistry, DiscordRouter } from 'discord-ai-sdk';
-
-const reg = new ToolRegistry();
-reg.setSafetyModeCap(async (guild) => (guild.id === 'VIP' ? 'high' : 'mid'));
-
-const router = new DiscordRouter({
-  mode: 'slash',
-  activator: 'assist',
-  engine,
-  requiredRoleFn: async (guild) => 'ROLE_ID',
-  allowedChannelsFn: async (guild) => ['CHANNEL_ID'],
+registry.setSafetyModeCap(async (guild) => {
+  // fetch from db or config
+  return 'high';
 });
 ```
 
-## Custom RateLimiter
-
-Swap in a custom instance with dynamic limits.
+## Discoverability
 
 ```ts
-import { RateLimiter } from 'discord-ai-sdk';
+registry.getTool('myCustomTool'); // single tool or undefined
+registry.getAllTools(); // all registered tools
 
-const rateLimiter = new RateLimiter({
-  limitCount: 3,
-  windowMs: 60_000,
-  customRateLimits: async (userId, guild) => ({ limitCount: 5, windowMs: 30_000 }),
-});
+// Requires request context to filter by safety cap and permissions
+// const available = await registry.getAllAvailableTools(context);
 ```
 
-## Custom Logger
-
-Provide your own `Logger` implementation.
+## Using with the engine
 
 ```ts
-import type { Logger } from 'discord-ai-sdk';
+import { AIEngine } from 'discord-ai-sdk';
+import { openai } from '@ai-sdk/openai';
 
-class MyLogger implements Logger {
-  debug(msg: string, meta?: unknown) {}
-  info(msg: string, meta?: unknown) {}
-  warn(msg: string, meta?: unknown) {}
-  error(msg: string | Error, meta?: unknown) {}
-}
+const engine = new AIEngine({
+  model: openai('gpt-4o'),
+  toolRegistry: registry,
+});
 ```

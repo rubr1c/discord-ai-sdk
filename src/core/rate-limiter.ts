@@ -9,6 +9,7 @@ import type { CompositeLogger } from '@/core/utils/logger/composite-logger';
 export interface RateLimitOpts {
   /** The limit count. */
   limitCount: number;
+
   /** The window in milliseconds. */
   windowMs: number;
 }
@@ -24,13 +25,11 @@ export type RateLimitFn = ((userId: string, guild: Guild) => Promise<RateLimitOp
 export interface RateLimiterProps extends RateLimitOpts {
   /** The custom rate limits function. @default undefined */
   customRateLimits?: RateLimitFn;
+
   /** The logger. @default new ConsoleLogger() */
   logger?: Logger | CompositeLogger;
 }
 
-/**
- * Rate limiter.
- */
 export class RateLimiter {
   private opts: RateLimitOpts;
   private readonly requestTimestamps = new Map<string, number[]>();

@@ -1,15 +1,16 @@
-import type { AITool, Logger, Safety } from '@/core/types';
+import type { Logger, Safety } from '@/core/types';
 import { SAFETY } from '@/core/types';
 import type { RequestContext } from '@/core/types';
 import { ConsoleLogger } from '@/core/utils/logger/console-logger';
 import type { Guild } from 'discord.js';
 import type { CompositeLogger } from '@/core/utils/logger/composite-logger';
+import type { ToolFactory } from '@/tools/types';
 
 /**
  * Tool registry properties.
  */
 export interface ToolRegistryProps<
-  TInitialTools extends Record<string, AITool> = Record<string, AITool>,
+  TInitialTools extends Record<string, ToolFactory> = Record<string, ToolFactory>,
 > {
   /** The tools to register. */
   tools?: TInitialTools;
@@ -21,11 +22,10 @@ export interface ToolRegistryProps<
   safetyModeCap?: ((guild: Guild) => Promise<Safety>) | Safety;
 }
 
-/**
- * Tool registry.
- */
-export class ToolRegistry<TInitialTools extends Record<string, AITool> = Record<string, AITool>> {
-  private tools: Record<string, AITool>;
+export class ToolRegistry<
+  TInitialTools extends Record<string, ToolFactory> = Record<string, ToolFactory>,
+> {
+  private tools: Record<string, ToolFactory>;
   private safetyModeCap: ((guild: Guild) => Promise<Safety>) | Safety = 'high';
   public logger: Logger | CompositeLogger;
 
@@ -50,7 +50,7 @@ export class ToolRegistry<TInitialTools extends Record<string, AITool> = Record<
    * @param tool - The tool to add.
    * @param overwrite - Whether to overwrite the tool if it already exists. @default false
    */
-  public addTool(name: string, tool: AITool, overwrite = false): void {
+  public addTool(name: string, tool: ToolFactory, overwrite = false): void {
     if (!overwrite && this.hasTool(name)) {
       throw new Error(`Tool "${name}" already exists`);
     }
@@ -96,7 +96,7 @@ export class ToolRegistry<TInitialTools extends Record<string, AITool> = Record<
    * @param name - The name of the tool.
    * @returns The tool.
    */
-  public getTool(name: string): AITool | undefined {
+  public getTool(name: string): ToolFactory | undefined {
     return this.tools[name];
   }
 
@@ -107,7 +107,7 @@ export class ToolRegistry<TInitialTools extends Record<string, AITool> = Record<
    */
   public async getAllAvailableTools(
     ctx: RequestContext,
-  ): Promise<Readonly<Record<string, AITool>>> {
+  ): Promise<Readonly<Record<string, ToolFactory>>> {
     const safetyMode =
       typeof this.safetyModeCap === 'function'
         ? await this.safetyModeCap(ctx.guild)
@@ -121,7 +121,7 @@ export class ToolRegistry<TInitialTools extends Record<string, AITool> = Record<
     }
 
     const currentSafetyLevel = SAFETY[safetyMode];
-    const availableTools: Record<string, AITool> = {};
+    const availableTools: Record<string, ToolFactory> = {};
 
     for (const [toolName, tool] of Object.entries(this.tools)) {
       const toolSafetyLevel = SAFETY[tool.safetyLevel];
@@ -143,7 +143,7 @@ export class ToolRegistry<TInitialTools extends Record<string, AITool> = Record<
    * Gets all the tools in the registry.
    * @returns The list of tools.
    */
-  public getAllTools(): Readonly<Record<string, AITool>> {
+  public getAllTools(): Readonly<Record<string, ToolFactory>> {
     let allTools = { ...this.tools };
     this.logger.debug({
       message: 'ToolRegistry.getAllTools',

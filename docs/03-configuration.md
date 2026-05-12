@@ -5,13 +5,39 @@
 AIEngine constructor options (defaults shown):
 
 - `model`: Language model from `ai` (required)
-- `promptBuilder`: `new PromptBuilder('', false, logger)`
-- `toolRegistry`: `new ToolRegistry({ tools: discordApiTools, logger })`
+- `promptBuilder`: `new PromptBuilder({ system: '', override: false, logger })`
+- `toolRegistry`: by default, an internal `ToolRegistry` is created with a minimal set of tools (channels, roles, `member.getMembers`, `member.getUserId`, `message.getMessages`, `message.sendMessage`).
 - `rateLimiter`: `new RateLimiter({ limitCount: 3, windowMs: 60000, logger })`
+- `logger?`: `Logger | CompositeLogger`
 - `maxRetries`: 2
 - `maxSteps`: 5
 - `temperature`: 0
 - `maxTokens`: 400
+
+Example:
+
+```ts
+import {
+  AIEngine,
+  PromptBuilder,
+  ToolRegistry,
+  ConsoleLogger,
+  discordApiTools,
+} from 'discord-ai-sdk';
+import { openai } from '@ai-sdk/openai';
+
+const logger = new ConsoleLogger({ level: 'info' });
+
+const engine = new AIEngine({
+  model: openai('gpt-4o'),
+  logger,
+  promptBuilder: new PromptBuilder({ system: 'You are helpful.', logger }),
+  maxSteps: 5,
+  maxRetries: 2,
+  temperature: 0,
+  maxTokens: 400,
+});
+```
 
 ## Router Options
 
@@ -28,6 +54,7 @@ AIEngine constructor options (defaults shown):
 - `limitCount`: number of requests per window
 - `windowMs`: window length in ms
 - `customRateLimits?`: `(userId, guild) => Promise<{ limitCount: number; windowMs: number }>`
+- `logger?`: logger instance to use
 
 ## Environment Variables
 

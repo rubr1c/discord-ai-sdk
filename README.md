@@ -9,7 +9,7 @@ TypeScript SDK that connects Discord.js with the Vercel AI SDK to let AI safely 
 - **Tool registry**: built-in tools + custom tools with safety caps (`low`/`mid`/`high`)
 - **Discord router**: message or slash modes, permission checks, channel gating, ephemeral replies, safe long-message splitting
 - **Rate limiting**: per-user, overridable
-- **Pluggable logging**: set via `LOG_LEVEL` or `ConsoleLogger`
+- **Pluggable logging**: `ConsoleLogger`, `AuditLogger`, `CompositeLogger`; or bring your own
 
 ### Installation
 
@@ -30,7 +30,7 @@ Requirements: Node.js 18.17+ or 20+
 
 ```ts
 import { Client, GatewayIntentBits, Events } from 'discord.js';
-import { AIEngine, DiscordRouter, PromptBuilder } from 'discord-ai-sdk';
+import { AIEngine, DiscordRouter, PromptBuilder, ConsoleLogger } from 'discord-ai-sdk';
 import { openai } from '@ai-sdk/openai'; // model of choice from ai sdk
 
 const client = new Client({
@@ -46,6 +46,7 @@ const client = new Client({
 const engine = new AIEngine({
   model: openai('gpt-4o'),
   // Optional tuning: maxSteps: 5, maxRetries: 2, temperature: 0, maxTokens: 400
+  logger: new ConsoleLogger({ level: 'info' }),
   promptBuilder: new PromptBuilder(),
 });
 
@@ -98,26 +99,40 @@ LOG_LEVEL=info               # debug | info | warn | error (optional)
 
 ### Custom tools (optional)
 
-You can add your own tools alongside the built-ins.
+By default, the engine registers a minimal tool set (channels, roles, and selected member/message tools) to keep the model focused. The built-in `discordApiTools` are grouped by domain so you can opt-in per group or mix with custom tools.
 
 ```ts
-import { ToolRegistry, createTool, discordApiTools } from 'discord-ai-sdk';
-import type { Guild } from 'discord.js';
-import { tool, type Tool } from 'ai';
+import { ToolRegistry, discordApiTools } from 'discord-ai-sdk';
+import { tool } from 'ai';
+import z from 'zod';
+import type { ToolFactory, ToolResult } from '@/tools/types';
 
-function myCustomTool(guild: Guild): Tool {
-  return tool({
-    /* ... */
-  });
-}
+export const myCustomTool: ToolFactory = {
+  safetyLevel: 'low',
+  tool: ({ guild, logger }) =>
+    tool({
+      description: 'demo',
+      inputSchema: z.object({ name: z.string().min(1) }),
+      execute: async ({ name }): Promise<ToolResult> => {
+        logger.info({ message: 'myCustomTool.execute', guild, meta: { name } });
+        return { summary: `Hello ${name}` };
+      },
+    }),
+};
 
 const toolRegistry = new ToolRegistry({
   tools: {
-    ...discordApiTools,
-    myTool: createTool(myCustomTool, 'low'), // safety: 'low' | 'mid' | 'high'
+    // opt-in to built-in groups you need
+    ...discordApiTools.channelTools,
+    getMessages: discordApiTools.messageTools.getMessages,
+    sendMessage: discordApiTools.messageTools.sendMessage,
+    // add your custom tools
+    myCustomTool,
   },
 });
 ```
+
+See docs for more groups: roles, categories, members, messages, threads, reactions, voice (VC), and audit logs.
 
 ### Useful links
 

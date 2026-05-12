@@ -69,8 +69,8 @@ export class AIEngine {
   private promptBuilder: PromptBuilder;
   private toolRegistry: ToolRegistry;
   private rateLimiter: RateLimiter;
-  public logger: Logger | CompositeLogger;
   private config: AIEngineConfig;
+  public logger: Logger | CompositeLogger;
 
   /**
    * Creates an AI engine that orchestrates model calls and Discord tools.
@@ -85,7 +85,15 @@ export class AIEngine {
     this.toolRegistry =
       options.toolRegistry ||
       new ToolRegistry({
-        tools: discordApiTools,
+        // Core Discord bot functionality: Essential tools only to reduce lost in the middle problems
+        tools: {
+          ...discordApiTools.channelTools,
+          ...discordApiTools.roleTools,
+          getMembers: discordApiTools.memberTools.getMembers,
+          getUserId: discordApiTools.memberTools.getUserId,
+          getMessages: discordApiTools.messageTools.getMessages,
+          sendMessage: discordApiTools.messageTools.sendMessage,
+        },
         logger: this.logger,
       });
     this.rateLimiter =
@@ -139,7 +147,7 @@ export class AIEngine {
         system: prompts.system,
         tools: Object.fromEntries(
           Object.entries(await this.toolRegistry.getAllAvailableTools(ctx)).map(
-            ([name, aiTool]) => [name, aiTool.tool(ctx.guild)],
+            ([name, aiTool]) => [name, aiTool.tool({ guild: ctx.guild, logger: this.logger })],
           ),
         ),
         maxRetries: this.config.maxRetries,
@@ -220,6 +228,7 @@ export class AIEngine {
     return 'Tool executed successfully';
   }
 
+  /** @deprecated Use `logger` property instead. */
   public getLogger(): Logger {
     return this.logger;
   }
@@ -244,6 +253,7 @@ export class AIEngine {
     return this.config;
   }
 
+  /** @deprecated Use `logger` property instead. */
   public setLogger(logger: Logger) {
     this.logger = logger;
   }

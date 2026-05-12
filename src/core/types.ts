@@ -1,9 +1,5 @@
-import type { Tool } from 'ai';
 import type { Guild, GuildMember, APIInteractionGuildMember, GuildBasedChannel } from 'discord.js';
 
-/**
- * Request context.
- */
 export interface RequestContext {
   guild: Guild;
   channel: GuildBasedChannel;
@@ -23,11 +19,6 @@ export const SAFETY = {
 
 export type Safety = keyof typeof SAFETY;
 
-export interface AITool {
-  tool: (guild: Guild) => Tool;
-  safetyLevel: Safety;
-}
-
 export type BotMode = 'slash' | 'message';
 
 export interface LoggerParams {
@@ -38,8 +29,10 @@ export interface LoggerParams {
 }
 
 export interface Logger {
+  /** Minimum log level. */
   level: LogLevel;
 
+  /** Checks if a log level should be logged. */
   shouldLog(level: LogLevel): boolean;
 
   debug(params: LoggerParams): void;

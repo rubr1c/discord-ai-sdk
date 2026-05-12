@@ -1,5 +1,6 @@
 import { Client, GatewayIntentBits, Events } from 'discord.js';
-import { AIEngine, createTool, discordApiTools, DiscordRouter, ToolRegistry } from 'discord-ai-sdk';
+import { AIEngine, discordApiTools, DiscordRouter, ToolRegistry } from 'discord-ai-sdk';
+import type { ToolFactory, ToolResult } from 'discord-ai-sdk';
 // model of choice from ai sdk
 // @ts-expect-error - @ai-sdk/openai is not installed in this example project
 import { openai } from '@ai-sdk/openai';
@@ -18,43 +19,49 @@ const client = new Client({
   ],
 });
 
+// Define custom tools using the ToolFactory pattern
+const myTool: ToolFactory = {
+  safetyLevel: 'low',
+  tool: ({ guild, logger }) =>
+    tool({
+      description: 'my tool',
+      inputSchema: z.object({
+        name: z.string(),
+      }),
+      execute: async ({ name }): Promise<ToolResult> => {
+        logger?.info({
+          message: 'myTool called',
+          meta: { name },
+        });
+        return { summary: `[${guild.name}] Hello ${name}` };
+      },
+    }),
+};
+
+const myTool2: ToolFactory = {
+  safetyLevel: 'low',
+  tool: ({ guild }) =>
+    tool({
+      description: 'my tool 2',
+      inputSchema: z.object({
+        name: z.string(),
+      }),
+      execute: async ({ name }): Promise<ToolResult> => {
+        return { summary: `[${guild.name}] Hello ${name}` };
+      },
+    }),
+};
+
 const toolRegistry = new ToolRegistry({
   tools: {
-    ...discordApiTools, // to keep the default tools when passing to engine
-    myTool: createTool(
-      // guild is passed in from the engine
-      (guild) =>
-        tool({
-          description: 'my tool',
-          inputSchema: z.object({
-            name: z.string(),
-          }),
-          execute: async ({ name }) => {
-            return { summary: `[${guild.name}] Hello ${name}` };
-          },
-        }),
-      'low',
-    ), // safety: 'low' | 'mid' | 'high'
+    // add the tools you want from the original tools
+    ...discordApiTools.channelTools,
+    ...discordApiTools.serverTools,
+    myTool,
   },
 });
 
-toolRegistry.addTool(
-  'myTool2',
-  createTool(
-    (guild) =>
-      tool({
-        description: 'my tool',
-        inputSchema: z.object({
-          name: z.string(),
-        }),
-        execute: async ({ name }) => {
-          return { summary: `[${guild.name}] Hello ${name}` };
-        },
-      }),
-    'low',
-  ),
-  true, // overwrite the tool if it already exists
-);
+toolRegistry.addTool('myTool2', myTool2, true);
 
 toolRegistry.removeTool('myTool2');
 

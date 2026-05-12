@@ -42,6 +42,7 @@ const client = new Client({
 
 const engine = new AIEngine({
   model: openai('gpt-4o'),
+  // optional: logger: new ConsoleLogger({ level: 'info' }),
 });
 
 const router = new DiscordRouter({

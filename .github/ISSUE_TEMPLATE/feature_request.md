@@ -1,17 +1,18 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: "[FEATURE]"
+title: '[FEATURE]'
 labels: ''
 assignees: ''
-
 ---
 
 ---
+
 name: "Feature Request"
 about: Suggest a new feature or tool for the Discord AI SDK
 title: "[FEATURE] <short description>"
 labels: enhancement
+
 ---
 
 **Is your feature request related to a problem? Please describe.**

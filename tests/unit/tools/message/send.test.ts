@@ -12,7 +12,7 @@ describe('tools/message/send', () => {
     const text = createFakeTextChannel({ id: '10', name: 'general' });
     const guild: Guild = createFakeGuild({ '10': text });
 
-    const tool = sendMessageTool(guild) as unknown as {
+    const tool = sendMessageTool.tool({ guild }) as unknown as {
       execute: (args: { channelId: string; content: string }) => Promise<{
         summary: string;
         data?: { id: string; url: string; channelId: string };
@@ -29,7 +29,7 @@ describe('tools/message/send', () => {
     const nonText = createFakeNonTextChannel({ id: '20', name: 'voice' });
     const guild = createFakeGuild({ '20': nonText });
 
-    const tool = sendMessageTool(guild) as unknown as {
+    const tool = sendMessageTool.tool({ guild }) as unknown as {
       execute: (args: { channelId: string; content: string }) => Promise<{ summary: string }>;
     };
 

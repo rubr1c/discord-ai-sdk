@@ -1,38 +1,52 @@
-import { tool, type Tool } from 'ai';
-import { type Guild } from 'discord.js';
+import { tool } from 'ai';
 import z from 'zod';
-import type { ToolResult } from '@/tools/types';
+import type { ToolFactory, ToolResult } from '@/tools/types';
 
 /**
- * Creates a tool to fetch server emojis.
- * @param guild - The guild.
- * @returns The tool binded to the guild.
+ * Creates a tool factory to fetch server emojis.
+ * @returns The tool factory.
  */
-export function getEmojisTool(guild: Guild): Tool {
-  return tool({
-    description: 'get server emojis',
-    inputSchema: z.object({}),
-    execute: async (): Promise<ToolResult> => {
-      try {
-        const fetched = await guild.emojis.fetch();
-        const list = Array.from(fetched.values()).map((e) => ({
-          id: e.id,
-          name: e.name,
-          url: e.imageURL(),
-          animated: e.animated,
-          available: e.available,
-          managed: e.managed,
-          requiresColons: e.requiresColons,
-        }));
+export const getEmojisTool: ToolFactory = {
+  tool: ({ guild, logger }) =>
+    tool({
+      description: 'get server emojis',
+      inputSchema: z.object({}),
+      execute: async (): Promise<ToolResult> => {
+        try {
+          logger?.info({
+            message: 'getEmojisTool called',
+          });
 
-        return {
-          summary: `Fetched emojis (${list.length})`,
-          data: list,
-        };
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        return { summary: `Failed to fetch emojis: ${message}` };
-      }
-    },
-  });
-}
+          const fetched = await guild.emojis.fetch();
+          const list = Array.from(fetched.values()).map((e) => ({
+            id: e.id,
+            name: e.name,
+            url: e.imageURL(),
+            animated: e.animated,
+            available: e.available,
+            managed: e.managed,
+            requiresColons: e.requiresColons,
+          }));
+
+          logger?.info({
+            message: 'getEmojisTool completed',
+            meta: { list },
+          });
+
+          return {
+            summary: `Fetched emojis (${list.length})`,
+            data: list,
+          };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          logger?.error({
+            message: 'getEmojisTool failed',
+            meta: { message },
+            error: err instanceof Error ? err : new Error(message),
+          });
+          return { summary: `Failed to fetch emojis: ${message}` };
+        }
+      },
+    }),
+  safetyLevel: 'low',
+};
