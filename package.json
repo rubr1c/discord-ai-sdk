@@ -19,11 +19,11 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Rubr1c/discord-ai-sdk.git"
+    "url": "git+https://github.com/rubr1c/discord-ai-sdk.git"
   },
-  "homepage": "https://github.com/Rubr1c/discord-ai-sdk#readme",
+  "homepage": "https://github.com/rubr1c/discord-ai-sdk#readme",
   "bugs": {
-    "url": "https://github.com/Rubr1c/discord-ai-sdk/issues"
+    "url": "https://github.com/rubr1c/discord-ai-sdk/issues"
   },
   "author": "",
   "license": "MIT",
