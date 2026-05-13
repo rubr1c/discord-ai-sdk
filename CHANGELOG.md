@@ -17,7 +17,7 @@ All notable changes to this project will be documented in this file.
 
 ### Updates
 
-- Bumped core Vercel AI SDK (`ai` to v6) and `@ai-sdk/google` (v3).
+- Bumped core Vercel AI SDK (`ai` to v6).
 - Bumped `discord.js` to `v14.26.4`.
 - Updated dev tooling: `typescript` (v6.0.3), `vitest` (v4.1.6), and `eslint` (v10.3.0).
 - Fixed path resolution configurations in `tsconfig.json` and `vitest.config.ts`.
