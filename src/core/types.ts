@@ -30,6 +30,14 @@ export interface AITool {
 
 export type BotMode = 'slash' | 'message';
 
+export interface Span {
+  name: string;
+  meta?: unknown;
+}
+
+/**
+ * Logger interface for any logger to work with the sdk
+ */
 export interface Logger {
   level: LogLevel;
 
@@ -39,6 +47,9 @@ export interface Logger {
   info(message: string, meta?: unknown): void;
   warn(message: string, meta?: unknown): void;
   error(message: string | Error, meta?: unknown): void;
+
+  enterSpan(span: Span): void;
+  exitSpan(): void;
 
   setGuild?(guild: Guild): void;
 }
