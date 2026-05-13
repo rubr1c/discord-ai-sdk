@@ -1,19 +1,19 @@
 [
   {
     "pattern": "**/*",
-    "prompt": "Repository: discord-ai-sdk. Purpose: TypeScript SDK to connect Vercel AI SDK v5 with Discord.js v14. Target Node >=18.17 (ESM-first, with CJS build via tsup).\n\nGeneral rules:\n- Public API must be clean: named exports only, re-export from src/index.ts, keep package.json exports aligned.\n- No breaking changes unless documented with migration notes.\n- Use explicit types for all public APIs. Internal inference is fine.\n- Keep runtime deps minimal (peer deps: ai ^5, discord.js ^14, optional: zod).\n- Prefer pure, composable functions; no side effects at import time.\n- Use async/await and AbortSignal for cancelable ops.\n- Handle errors with typed Errors and actionable messages. Validate external inputs with zod.safeParse.\n- Respect Discord API: check permissions/intents, defer replies >2s, use ephemeral for sensitive data, backoff on 429s.\n- Logging must be minimal and never leak secrets.\n- Follow Conventional Commits. Open PRs against develop.\n- Keep bundle small and tree-shakeable (sideEffects: false)."
+    "prompt": "Repository: discord-ai-sdk. Purpose: TypeScript SDK to connect Vercel AI SDK (`ai` ^6) with Discord.js (^14). Target Node >=18.17 || >=20 (ESM-first, with CJS build via tsup).\n\nGeneral rules:\n- Public API must be clean: named exports only, re-export from src/index.ts, keep package.json exports aligned.\n- No breaking changes unless documented with migration notes.\n- Use explicit types for all public APIs. Internal inference is fine.\n- Runtime: zod ^4.4.3. Peer deps: ai ^6.0.0, discord.js ^14.0.0.\n- Prefer pure, composable functions; no side effects at import time.\n- Use async/await and AbortSignal for cancelable ops.\n- Handle errors with typed Errors and actionable messages. Validate external inputs with zod.safeParse.\n- Respect Discord API: check permissions/intents, defer replies >2s, use ephemeral for sensitive data, backoff on 429s.\n- Logging must be minimal and never leak secrets.\n- Follow Conventional Commits. Open PRs against develop.\n- Keep bundle small and tree-shakeable (sideEffects: false)."
   },
   {
     "pattern": "src/**/*.ts",
     "prompt": "Source code rules:\n- ESM only: use import/export and import type for TS types.\n- Named exports only (no default exports). Re-export from src/index.ts.\n- Validate Discord payloads at the module boundary with zod.\n- Keep modules small and side-effect free. Initialize lazily inside functions.\n- Organize imports: stdlib, third-party, then local. Keep sorted and consistent.\n- Handle concurrency with AbortController/AbortSignal; never block event loop.\n- Add TSDoc for all exported types/functions. Include short runnable examples."
   },
   {
-    "pattern": "test/**/*.ts",
+    "pattern": "tests/**/*.ts",
     "prompt": "Testing rules (Vitest):\n- Unit tests must be deterministic and fast. Do not call real Discord or network APIs — always mock.\n- Use vi.fn() and module mocks for isolation. Prefer table-driven tests.\n- Test edge cases: rate limits, permission failures, invalid payloads.\n- Prefer explicit assertions. Snapshots only for stable outputs.\n- Write tests against the public API surface."
   },
   {
     "pattern": "package.json",
-    "prompt": "Packaging rules:\n- Ensure exports, main, module, and types align with tsup outputs (ESM + CJS).\n- Set sideEffects: false.\n- Runtime deps minimal; peer deps only for ai ^5 and discord.js ^14. zod allowed.\n- Node engines must stay >=18.17 || >=20.\n- Scripts: build (tsup), typecheck (tsc --noEmit), lint (eslint), format (prettier), test (vitest), docs (typedoc), prepublishOnly (typecheck+lint+build)."
+    "prompt": "Packaging rules:\n- Ensure exports, main, module, and types align with tsup outputs (ESM + CJS).\n- Set sideEffects: false.\n- dependencies: zod ^4.4.3. peerDependencies: ai ^6.0.0, discord.js ^14.0.0.\n- Node engines must stay >=18.17 || >=20.\n- Scripts: build (tsup), typecheck (tsc --noEmit), lint (eslint), format (prettier), test (vitest -c vitest.config.ts), test:run, docs (typedoc), prepublishOnly (pnpm typecheck && pnpm lint && pnpm build)."
   },
   {
     "pattern": "**/*.md",

@@ -59,7 +59,7 @@
   ],
   "packageManager": "pnpm@10.13.1",
   "peerDependencies": {
-    "ai": "^5.0.0",
+    "ai": "^6.0.0",
     "discord.js": "^14.0.0"
   },
   "dependencies": {
