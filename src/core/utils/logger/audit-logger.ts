@@ -124,7 +124,7 @@ export class AuditLogger extends BaseLogger {
 
     const embed = new EmbedBuilder()
       .setColor(colors[level])
-      .setTitle(level.toUpperCase())
+      .setTitle(this.formatPrefix(level))
       .setDescription(message)
       .setTimestamp();
 

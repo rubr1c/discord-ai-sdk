@@ -1,4 +1,4 @@
-import type { Logger, LogLevel } from '@/core/types';
+import type { Logger, LogLevel, Span } from '@/core/types';
 import { BaseLogger } from './base-logger';
 import type { Guild } from 'discord.js';
 
@@ -37,5 +37,15 @@ export class CompositeLogger extends BaseLogger {
 
   error(msg: string | Error, meta?: unknown) {
     this.loggers.forEach((l) => l.error(msg, meta));
+  }
+
+  override enterSpan(span: Span): void {
+    super.enterSpan(span);
+    this.loggers.forEach((l) => l.enterSpan(span));
+  }
+
+  override exitSpan(): void {
+    super.exitSpan();
+    this.loggers.forEach((l) => l.exitSpan());
   }
 }

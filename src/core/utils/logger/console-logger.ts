@@ -16,25 +16,28 @@ export class ConsoleLogger extends BaseLogger {
 
   debug(msg: string, meta?: unknown) {
     if (!this.shouldLog('debug')) return;
-    console.debug(`[DEBUG] ${msg}`, meta ?? '');
+    console.debug(`${this.formatPrefix('debug')} ${msg}`, meta ?? '');
   }
 
   info(msg: string, meta?: unknown) {
     if (!this.shouldLog('info')) return;
-    console.info(`[INFO] ${msg}`, meta ?? '');
+    console.info(`${this.formatPrefix('info')} ${msg}`, meta ?? '');
   }
 
   warn(msg: string, meta?: unknown) {
     if (!this.shouldLog('warn')) return;
-    console.warn(`[WARN] ${msg}`, meta ?? '');
+    console.warn(`${this.formatPrefix('warn')} ${msg}`, meta ?? '');
   }
 
   error(msg: string | AIError, meta?: unknown) {
     if (!this.shouldLog('error')) return;
     if (msg instanceof AIError) {
-      console.error(`[ERROR:${msg.getReason()}] ${msg.message}`, { stack: msg.stack, meta });
+      console.error(`${this.formatPrefix('error')} [${msg.getReason()}] ${msg.message}`, {
+        stack: msg.stack,
+        meta,
+      });
     } else {
-      console.error(`[ERROR] ${msg}`, meta ?? '');
+      console.error(`${this.formatPrefix('error')} ${msg}`, meta ?? '');
     }
   }
 }
